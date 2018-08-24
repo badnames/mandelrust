@@ -5,9 +5,10 @@ use sdl2::event::{Event};
 use sdl2::surface::{Surface};
 use sdl2::pixels::PixelFormatEnum;
 
-
 const WIDTH: u32 = 400;
 const HEIGHT: u32 = 400; 
+
+const SCALE: f64 = 3.5;
 
 fn main() {
     let context = sdl2::init().unwrap();
@@ -66,18 +67,73 @@ fn render_mandelbrot<'a>() -> [u8; (3 * WIDTH * HEIGHT) as usize] {
     const ARRAY_SIZE: usize = (3 * WIDTH * HEIGHT) as usize;
     let mut pixels: [u8; ARRAY_SIZE] = [0xFF; ARRAY_SIZE];
 
+    println!("rendering...");
+
     for y in 0..HEIGHT {
+        
+        println!("row {}", y);
+
         for x in 0..WIDTH {
+            let x_scaled: f64 = (x as f64) / (WIDTH as f64) * SCALE - SCALE / 2.0;
+            let y_scaled: f64 = (y as f64) / (HEIGHT as f64) * SCALE - SCALE / 2.0;
+
+            let itterations = itterate(x_scaled, y_scaled, 50);
+
             //make every 10th row of pixels red
-            if y % 10 == 0 {
-                pixels[coordinates_to_array_index(x, y) + 0] = 0xFF; //RED
+            if itterations == 0 {
+                pixels[coordinates_to_array_index(x, y) + 0] = 0x00; //RED
+                pixels[coordinates_to_array_index(x, y) + 1] = 0x00; //GREEN
+                pixels[coordinates_to_array_index(x, y) + 2] = 0x00; //BLUE
+                continue;
+            }
+
+            if itterations > 5 {
+                pixels[coordinates_to_array_index(x, y) + 0] = 0x00; //RED
+                pixels[coordinates_to_array_index(x, y) + 1] = 0x00; //GREEN
+                pixels[coordinates_to_array_index(x, y) + 2] = 0xAA; //BLUE
+            } else 
+            
+            if itterations > 10 {
+                pixels[coordinates_to_array_index(x, y) + 0] = 0x00; //RED
+                pixels[coordinates_to_array_index(x, y) + 1] = 0xAA; //GREEN
+                pixels[coordinates_to_array_index(x, y) + 2] = 0x00; //BLUE
+            } else 
+
+            if itterations > 25 {
+                pixels[coordinates_to_array_index(x, y) + 0] = 0x77; //RED
+                pixels[coordinates_to_array_index(x, y) + 1] = 0x44; //GREEN
+                pixels[coordinates_to_array_index(x, y) + 2] = 0x44; //BLUE
+            }
+
+            else {
+                pixels[coordinates_to_array_index(x, y) + 0] = 0xAA; //RED
                 pixels[coordinates_to_array_index(x, y) + 1] = 0x00; //GREEN
                 pixels[coordinates_to_array_index(x, y) + 2] = 0x00; //BLUE
             }
         }
+
+        println!("done");
+
     }
 
     return pixels;
+}
+
+fn itterate(x: f64, y: f64, max_itterations: u8) -> u8 {
+    let mut curr_x: f64 = 0.0;
+    let mut curr_y: f64 = 0.0;
+
+    for itteration in 1..max_itterations {
+        curr_x = (curr_x * curr_x - curr_y * curr_y) + x;
+        curr_y = (curr_x * curr_y + curr_x * curr_y) + y;
+
+        if (curr_x * curr_x + curr_y * curr_y).sqrt() > 4.0 {
+            return itteration;
+        }  
+    }
+
+    0
+
 }
 
 fn coordinates_to_array_index(x: u32, y: u32) -> usize {
@@ -90,5 +146,6 @@ fn find_sdl_gl_driver() -> Option<u32> {
             return Some(index as u32);
         }
     }
+
     None
 }
