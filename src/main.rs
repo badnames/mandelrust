@@ -65,9 +65,24 @@ fn main() {
 fn render_mandelbrot<'a>() -> [u8; (3 * WIDTH * HEIGHT) as usize] {
 
     const ARRAY_SIZE: usize = (3 * WIDTH * HEIGHT) as usize;
-    let pixels: [u8; ARRAY_SIZE] = [0xFF; ARRAY_SIZE];
+    let mut pixels: [u8; ARRAY_SIZE] = [0xFF; ARRAY_SIZE];
+
+    for y in 0..HEIGHT {
+        for x in 0..WIDTH {
+            //make every 10th row of pixels red
+            if(y % 10 == 0) {
+                pixels[coordinates_to_array_index(x, y) + 0] = 0xFF; //RED
+                pixels[coordinates_to_array_index(x, y) + 1] = 0x00; //GREEN
+                pixels[coordinates_to_array_index(x, y) + 2] = 0x00; //BLUE
+            }
+        }
+    }
 
     return pixels;
+}
+
+fn coordinates_to_array_index(x: u32, y: u32) -> usize {
+    ((y * WIDTH * 3) + (x * 3)) as usize
 }
 
 fn find_sdl_gl_driver() -> Option<u32> {
