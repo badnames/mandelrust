@@ -5,10 +5,10 @@ use sdl2::event::{Event};
 use sdl2::surface::{Surface};
 use sdl2::pixels::PixelFormatEnum;
 
-const WIDTH: u32 = 400;
-const HEIGHT: u32 = 400; 
+const WIDTH: u32 = 800;
+const HEIGHT: u32 = 600; 
 
-const SCALE: f64 = 3.5;
+static mut SCALE: f64 = 3.5;
 
 fn main() {
     let context = sdl2::init().unwrap();
@@ -27,28 +27,9 @@ fn main() {
 
     let texture_creator = canvas.texture_creator();
 
-    let mut pixels = render_mandelbrot();
-    
-    let surface = match Surface::from_data(&mut pixels, WIDTH, HEIGHT, 3 * WIDTH, PixelFormatEnum::RGB24) {
-        Ok(surface) => surface,
-        Err(err) => panic!("Invalid surface generated: {}", err)
-    };
-    
-    let texture = texture_creator.create_texture_from_surface(surface).unwrap();
-
     gl::load_with(|name| context_video.gl_get_proc_address(name) as *const _);
     let _ = canvas.window().gl_set_context_to_current();
     
-    unsafe {
-        gl::ClearColor(0.0, 0.0, 0.0, 1.0);
-        gl::Clear(gl::COLOR_BUFFER_BIT);
-    }
-
-    let _ = canvas.copy(&texture, None, None);
-
-    canvas.present();
-
-
     let mut events = context.event_pump().unwrap();    
 
     'main_loop : loop {
@@ -58,6 +39,28 @@ fn main() {
                 _               => continue
             }
         } 
+
+        let mut pixels = render_mandelbrot();
+    
+        let surface = match Surface::from_data(&mut pixels, WIDTH, HEIGHT, 3 * WIDTH, PixelFormatEnum::RGB24) {
+            Ok(surface) => surface,
+            Err(err) => panic!("Invalid surface generated: {}", err)
+        };
+        
+        let texture = texture_creator.create_texture_from_surface(surface).unwrap();
+
+        unsafe {
+            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+        }
+
+        let _ = canvas.copy(&texture, None, None);
+
+        canvas.present();
+
+        unsafe {
+            SCALE /= 1.1;
+        }
     }
 
 }
@@ -71,11 +74,14 @@ fn render_mandelbrot<'a>() -> [u8; (3 * WIDTH * HEIGHT) as usize] {
 
     for y in 0..HEIGHT {
         
-        println!("row {}", y);
-
         for x in 0..WIDTH {
-            let x_scaled: f64 = (x as f64) / (WIDTH as f64) * SCALE - SCALE / 2.0;
-            let y_scaled: f64 = (y as f64) / (HEIGHT as f64) * SCALE - SCALE / 2.0;
+            let mut x_scaled: f64 = 0.0;
+            let mut y_scaled: f64 = 0.0;
+
+            unsafe {
+                x_scaled = (x as f64) / (WIDTH as f64)  * SCALE - SCALE / 2.0 ;
+                y_scaled = (y as f64) / (HEIGHT as f64) * SCALE - SCALE / 2.0;
+            }
 
             let itterations = itterate(x_scaled, y_scaled, 50);
 
@@ -112,9 +118,11 @@ fn render_mandelbrot<'a>() -> [u8; (3 * WIDTH * HEIGHT) as usize] {
             }
         }
 
-        println!("done");
+       
 
     }
+
+    println!("done");
 
     return pixels;
 }
