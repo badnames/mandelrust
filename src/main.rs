@@ -6,7 +6,6 @@ use sdl2::surface::{Surface};
 use sdl2::pixels::PixelFormatEnum;
 
 
-
 const WIDTH: u32 = 400;
 const HEIGHT: u32 = 400; 
 
@@ -25,7 +24,7 @@ fn main() {
     .build()
     .unwrap();
 
-    let textureCreator = canvas.texture_creator();
+    let texture_creator = canvas.texture_creator();
 
     let mut pixels = render_mandelbrot();
     
@@ -34,17 +33,17 @@ fn main() {
         Err(err) => panic!("Invalid surface generated: {}", err)
     };
     
-    let texture = textureCreator.create_texture_from_surface(surface).unwrap();
+    let texture = texture_creator.create_texture_from_surface(surface).unwrap();
 
     gl::load_with(|name| context_video.gl_get_proc_address(name) as *const _);
-    canvas.window().gl_set_context_to_current();
+    let _ = canvas.window().gl_set_context_to_current();
     
     unsafe {
         gl::ClearColor(0.0, 0.0, 0.0, 1.0);
         gl::Clear(gl::COLOR_BUFFER_BIT);
     }
 
-    canvas.copy(&texture, None, None);
+    let _ = canvas.copy(&texture, None, None);
 
     canvas.present();
 
@@ -70,7 +69,7 @@ fn render_mandelbrot<'a>() -> [u8; (3 * WIDTH * HEIGHT) as usize] {
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
             //make every 10th row of pixels red
-            if(y % 10 == 0) {
+            if y % 10 == 0 {
                 pixels[coordinates_to_array_index(x, y) + 0] = 0xFF; //RED
                 pixels[coordinates_to_array_index(x, y) + 1] = 0x00; //GREEN
                 pixels[coordinates_to_array_index(x, y) + 2] = 0x00; //BLUE
