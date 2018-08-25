@@ -8,7 +8,12 @@ use sdl2::pixels::PixelFormatEnum;
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600; 
 
-static mut SCALE: f64 = 3.5;
+const X_POS: f64 = -0.0091275;
+const Y_POS: f64= 0.7899912;
+
+const MAX_ITTERATIONS: u8 = 200;
+
+static mut SCALE: f64 = 0.01401245;
 
 fn main() {
     let context = sdl2::init().unwrap();
@@ -59,7 +64,7 @@ fn main() {
         canvas.present();
 
         unsafe {
-            SCALE /= 1.1;
+            SCALE /= 1.001;
         }
     }
 
@@ -79,14 +84,14 @@ fn render_mandelbrot<'a>() -> [u8; (3 * WIDTH * HEIGHT) as usize] {
             let mut y_scaled: f64;
 
             unsafe {
-                x_scaled = (x as f64) / ((WIDTH) as f64)  * SCALE - SCALE / 2.0;
-                y_scaled = (y as f64) / ((HEIGHT) as f64) * SCALE - SCALE / 2.0;
+                x_scaled = (x as f64) / ((WIDTH) as f64)  * SCALE - SCALE / 2.0 + X_POS;
+                y_scaled = (y as f64) / ((HEIGHT) as f64) * SCALE - SCALE / 2.0 + Y_POS;
             }
 
-            let itterations = itterate(x_scaled, y_scaled, 50);
+            let itterations = itterate(x_scaled, y_scaled, MAX_ITTERATIONS);
 
             //make every 10th row of pixels red
-            if itterations == 50 {
+            if itterations == MAX_ITTERATIONS {
                 pixels[coordinates_to_array_index(x, y) + 0] = 0x00; //RED
                 pixels[coordinates_to_array_index(x, y) + 1] = 0x00; //GREEN
                 pixels[coordinates_to_array_index(x, y) + 2] = 0x00; //BLUE
