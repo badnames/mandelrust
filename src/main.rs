@@ -75,18 +75,18 @@ fn render_mandelbrot<'a>() -> [u8; (3 * WIDTH * HEIGHT) as usize] {
     for y in 0..HEIGHT {
         
         for x in 0..WIDTH {
-            let mut x_scaled: f64 = 0.0;
-            let mut y_scaled: f64 = 0.0;
+            let mut x_scaled: f64;
+            let mut y_scaled: f64;
 
             unsafe {
-                x_scaled = (x as f64) / (WIDTH as f64)  * SCALE - SCALE / 2.0 ;
-                y_scaled = (y as f64) / (HEIGHT as f64) * SCALE - SCALE / 2.0;
+                x_scaled = (x as f64) / ((WIDTH) as f64)  * SCALE - SCALE / 2.0;
+                y_scaled = (y as f64) / ((HEIGHT) as f64) * SCALE - SCALE / 2.0;
             }
 
             let itterations = itterate(x_scaled, y_scaled, 50);
 
             //make every 10th row of pixels red
-            if itterations == 0 {
+            if itterations == 50 {
                 pixels[coordinates_to_array_index(x, y) + 0] = 0x00; //RED
                 pixels[coordinates_to_array_index(x, y) + 1] = 0x00; //GREEN
                 pixels[coordinates_to_array_index(x, y) + 2] = 0x00; //BLUE
@@ -132,15 +132,19 @@ fn itterate(x: f64, y: f64, max_itterations: u8) -> u8 {
     let mut curr_y: f64 = 0.0;
 
     for itteration in 1..max_itterations {
-        curr_x = (curr_x * curr_x - curr_y * curr_y) + x;
-        curr_y = (curr_x * curr_y + curr_x * curr_y) + y;
+        let xx = curr_x * curr_x;
+        let yy = curr_y * curr_y;
+        let xy = curr_x * curr_y;
 
-        if (curr_x * curr_x + curr_y * curr_y).sqrt() > 4.0 {
+        curr_x = (xx - yy) + x;
+        curr_y = 2.0 * xy + y;
+
+        if (curr_x * curr_x + curr_y * curr_y) > 4.0 {
             return itteration;
         }  
     }
 
-    0
+    max_itterations
 
 }
 
