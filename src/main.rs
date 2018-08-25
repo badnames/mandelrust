@@ -13,7 +13,7 @@ const Y_POS: f64= 0.7899912;
 
 const MAX_ITTERATIONS: u8 = 200;
 
-static mut SCALE: f64 = 0.01401245;
+static mut SCALE: f64 = 0.1;
 
 fn main() {
     let context = sdl2::init().unwrap();
@@ -97,34 +97,7 @@ fn render_mandelbrot<'a>() -> [u8; (3 * WIDTH * HEIGHT) as usize] {
                 pixels[coordinates_to_array_index(x, y) + 2] = 0x00; //BLUE
                 continue;
             }
-
-            if itterations > 5 {
-                pixels[coordinates_to_array_index(x, y) + 0] = 0x00; //RED
-                pixels[coordinates_to_array_index(x, y) + 1] = 0x00; //GREEN
-                pixels[coordinates_to_array_index(x, y) + 2] = 0xAA; //BLUE
-            } else 
-            
-            if itterations > 10 {
-                pixels[coordinates_to_array_index(x, y) + 0] = 0x00; //RED
-                pixels[coordinates_to_array_index(x, y) + 1] = 0xAA; //GREEN
-                pixels[coordinates_to_array_index(x, y) + 2] = 0x00; //BLUE
-            } else 
-
-            if itterations > 25 {
-                pixels[coordinates_to_array_index(x, y) + 0] = 0x77; //RED
-                pixels[coordinates_to_array_index(x, y) + 1] = 0x44; //GREEN
-                pixels[coordinates_to_array_index(x, y) + 2] = 0x44; //BLUE
-            }
-
-            else {
-                pixels[coordinates_to_array_index(x, y) + 0] = 0xAA; //RED
-                pixels[coordinates_to_array_index(x, y) + 1] = 0x00; //GREEN
-                pixels[coordinates_to_array_index(x, y) + 2] = 0x00; //BLUE
-            }
         }
-
-       
-
     }
 
     println!("done");
