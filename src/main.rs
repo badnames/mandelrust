@@ -18,6 +18,8 @@ const MAX_ITTERATIONS: u32 = 200;
 const SCALE: f64 = 0.1;
 
 fn main() {
+
+    //setup SDL
     let context = sdl2::init().unwrap();
     let context_video = context.video().unwrap();
     
@@ -37,8 +39,12 @@ fn main() {
     gl::load_with(|name| context_video.gl_get_proc_address(name) as *const _);
     let _ = canvas.window().gl_set_context_to_current();
     
+
+
     let mut pixels = render::render_mandelbrot(WIDTH, HEIGHT, X_POS, Y_POS, SCALE, MAX_ITTERATIONS);
     
+
+
     let surface = match Surface::from_data(&mut pixels[..], WIDTH, HEIGHT, 3 * WIDTH, PixelFormatEnum::RGB24) {
         Ok(surface) => surface,
         Err(err) => panic!("Invalid surface generated: {}", err)
