@@ -31,19 +31,19 @@ pub fn render_mandelbrot(width: u32, height: u32, x_pos: f64, y_pos: f64, scale:
     pixels
 }
 
-fn itterate(x: f64, y: f64, max_itterations: u32) -> u32 {
-    let mut curr_x: f64 = 0.0;
-    let mut curr_y: f64 = 0.0;
+fn itterate(cx: f64, cy: f64, max_itterations: u32) -> u32 {
+    let mut zx: f64 = 0.0;
+    let mut zy: f64 = 0.0;
 
     for itteration in 1..max_itterations {
-        let xx = curr_x * curr_x;
-        let yy = curr_y * curr_y;
-        let xy = curr_x * curr_y;
+        let xx = zx * zx;
+        let yy = zy * zy;
+        let xy = zx * zy;
 
-        curr_x = (xx - yy) + x;
-        curr_y = 2.0 * xy + y;
+        zx = (xx - yy) + cx;
+        zy = 2.0 * xy + cy;
 
-        if (curr_x * curr_x + curr_y * curr_y) > 4.0 {
+        if (zx * zx + zy * zy) > 4.0 {
             return itteration;
         }  
     }

@@ -45,7 +45,9 @@ fn main() {
     };
     
     let texture = texture_creator.create_texture_from_surface(surface).unwrap();
+    let _ = canvas.copy(&texture, None, None);
 
+    canvas.present();
 
     let mut events = context.event_pump().unwrap();    
 
@@ -56,17 +58,6 @@ fn main() {
                 _               => continue
             }
         } 
-
-        
-        unsafe {
-            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
-        }
-
-        let _ = canvas.copy(&texture, None, None);
-
-        canvas.present();
-
     }
 
 }
