@@ -1,6 +1,8 @@
 extern crate sdl2;
 extern crate gl;
 
+mod render;
+
 use sdl2::event::{Event};
 use sdl2::surface::{Surface};
 use sdl2::pixels::PixelFormatEnum;
@@ -11,9 +13,9 @@ const HEIGHT: u32 = 600;
 const X_POS: f64 = -0.0091275;
 const Y_POS: f64= 0.7899912;
 
-const MAX_ITTERATIONS: u8 = 200;
+const MAX_ITTERATIONS: u32 = 200;
 
-static mut SCALE: f64 = 0.1;
+const SCALE: f64 = 0.1;
 
 fn main() {
     let context = sdl2::init().unwrap();
@@ -35,6 +37,16 @@ fn main() {
     gl::load_with(|name| context_video.gl_get_proc_address(name) as *const _);
     let _ = canvas.window().gl_set_context_to_current();
     
+    let mut pixels = render::render_mandelbrot(WIDTH, HEIGHT, X_POS, Y_POS, SCALE, MAX_ITTERATIONS);
+    
+    let surface = match Surface::from_data(&mut pixels[..], WIDTH, HEIGHT, 3 * WIDTH, PixelFormatEnum::RGB24) {
+        Ok(surface) => surface,
+        Err(err) => panic!("Invalid surface generated: {}", err)
+    };
+    
+    let texture = texture_creator.create_texture_from_surface(surface).unwrap();
+
+
     let mut events = context.event_pump().unwrap();    
 
     'main_loop : loop {
@@ -45,15 +57,7 @@ fn main() {
             }
         } 
 
-        let mut pixels = render_mandelbrot();
-    
-        let surface = match Surface::from_data(&mut pixels, WIDTH, HEIGHT, 3 * WIDTH, PixelFormatEnum::RGB24) {
-            Ok(surface) => surface,
-            Err(err) => panic!("Invalid surface generated: {}", err)
-        };
         
-        let texture = texture_creator.create_texture_from_surface(surface).unwrap();
-
         unsafe {
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
@@ -63,71 +67,8 @@ fn main() {
 
         canvas.present();
 
-        unsafe {
-            SCALE /= 1.001;
-        }
     }
 
-}
-
-fn render_mandelbrot<'a>() -> [u8; (3 * WIDTH * HEIGHT) as usize] {
-
-    const ARRAY_SIZE: usize = (3 * WIDTH * HEIGHT) as usize;
-    let mut pixels: [u8; ARRAY_SIZE] = [0xFF; ARRAY_SIZE];
-
-    println!("rendering...");
-
-    for y in 0..HEIGHT {
-        
-        for x in 0..WIDTH {
-            let mut x_scaled: f64;
-            let mut y_scaled: f64;
-
-            unsafe {
-                x_scaled = (x as f64) / ((WIDTH) as f64)  * SCALE - SCALE / 2.0 + X_POS;
-                y_scaled = (y as f64) / ((HEIGHT) as f64) * SCALE - SCALE / 2.0 + Y_POS;
-            }
-
-            let itterations = itterate(x_scaled, y_scaled, MAX_ITTERATIONS);
-
-            //make every 10th row of pixels red
-            if itterations == MAX_ITTERATIONS {
-                pixels[coordinates_to_array_index(x, y) + 0] = 0x00; //RED
-                pixels[coordinates_to_array_index(x, y) + 1] = 0x00; //GREEN
-                pixels[coordinates_to_array_index(x, y) + 2] = 0x00; //BLUE
-                continue;
-            }
-        }
-    }
-
-    println!("done");
-
-    return pixels;
-}
-
-fn itterate(x: f64, y: f64, max_itterations: u8) -> u8 {
-    let mut curr_x: f64 = 0.0;
-    let mut curr_y: f64 = 0.0;
-
-    for itteration in 1..max_itterations {
-        let xx = curr_x * curr_x;
-        let yy = curr_y * curr_y;
-        let xy = curr_x * curr_y;
-
-        curr_x = (xx - yy) + x;
-        curr_y = 2.0 * xy + y;
-
-        if (curr_x * curr_x + curr_y * curr_y) > 4.0 {
-            return itteration;
-        }  
-    }
-
-    max_itterations
-
-}
-
-fn coordinates_to_array_index(x: u32, y: u32) -> usize {
-    ((y * WIDTH * 3) + (x * 3)) as usize
 }
 
 fn find_sdl_gl_driver() -> Option<u32> {
