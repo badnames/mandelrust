@@ -1,3 +1,7 @@
+extern crate num_complex;
+
+use render::num_complex::Complex64;
+
 pub fn render_mandelbrot(width: u32, height: u32, x_pos: f64, y_pos: f64, scale: f64, max_itterations: u32) -> Vec<u8> {
 
     let array_size = (3 * width * height) as usize;
@@ -9,13 +13,10 @@ pub fn render_mandelbrot(width: u32, height: u32, x_pos: f64, y_pos: f64, scale:
     for y in 0..height {
         
         for x in 0..width {
-            let mut x_transformed: f64;
-            let mut y_transformed: f64;
+            let transformed = Complex64::new( (x as f64) / ((width) as f64)  * scale - scale / 2.0 + x_pos,
+                                            (y as f64) / ((height) as f64) * scale - scale / 2.0 + y_pos);
 
-            x_transformed = (x as f64) / ((width) as f64)  * scale - scale / 2.0 + x_pos;
-            y_transformed = (y as f64) / ((height) as f64) * scale - scale / 2.0 + y_pos;
-        
-            let itterations = itterate(x_transformed, y_transformed, max_itterations);
+            let itterations = itterate(transformed, max_itterations);
 
             if itterations == max_itterations {
                 pixels[coordinates_to_array_index(width, x, y) + 0] = 0x00; //RED
@@ -31,19 +32,14 @@ pub fn render_mandelbrot(width: u32, height: u32, x_pos: f64, y_pos: f64, scale:
     pixels
 }
 
-fn itterate(cx: f64, cy: f64, max_itterations: u32) -> u32 {
-    let mut zx: f64 = 0.0;
-    let mut zy: f64 = 0.0;
+ //formula from https://en.wikipedia.org/wiki/Mandelbrot_set#Formal_definition
+fn itterate(c: Complex64, max_itterations: u32) -> u32 {
+    let mut z = Complex64::new(0.0, 0.0);
 
     for itteration in 1..max_itterations {
-        let xx = zx * zx;
-        let yy = zy * zy;
-        let xy = zx * zy;
+        z = z.powf(2.0) + c;
 
-        zx = (xx - yy) + cx;
-        zy = 2.0 * xy + cy;
-
-        if (zx * zx + zy * zy) > 4.0 {
+        if (z.re * z.re + z.im * z.im) > 4.0 {
             return itteration;
         }  
     }
