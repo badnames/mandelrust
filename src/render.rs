@@ -1,4 +1,8 @@
-use std::thread;
+extern crate num_complex;
+extern crate palette;
+
+use render::num_complex::Complex64;
+use self::palette::{Srgb, LinSrgb, Lch, Pixel, Hue};
 
 pub fn render_mandelbrot(width: u32, height: u32, x_pos: f64, y_pos: f64, scale: f64, max_itterations: u32) -> Vec<u8> {
 
@@ -8,57 +12,33 @@ pub fn render_mandelbrot(width: u32, height: u32, x_pos: f64, y_pos: f64, scale:
 
     println!("rendering...");
 
-    let screen_coords_to_world_coords = |screen_coord: f64, screen_side_length: u32, scale: f64, camera_pos: f64| {
-        (screen_coord) / (screen_side_length as f64)  * scale - scale / 2.0 + camera_pos
-    };
-
-    for y in 0..height {
-        
+    for y in 0..height { 
         for x in 0..width {
+            let transformed = Complex64::new( (x as f64) / ((width) as f64)  * scale - scale / 2.0 + x_pos,
+                                              (y as f64) / ((height) as f64) * scale - scale / 2.0 + y_pos);
 
-            let mut x1_transformed: f64 = screen_coords_to_world_coords((x as f64) - 0.5, width,  scale, x_pos);
-            let mut y1_transformed: f64 = screen_coords_to_world_coords((y as f64) - 0.5, height, scale, y_pos);
+            let itterations = itterate(transformed, max_itterations);
 
-            let mut subpixel1: [u32; 3] = [0x00, 0x00, 0x00];
-            let handle1 = thread::spawn(move || {
-                subpixel1 = calculate_subpixel(x1_transformed, y1_transformed, max_itterations);
-            });
-            
+            if itterations == max_itterations {
+                pixels[coordinates_to_array_index(width, x, y) + 0] = 0x00; //RED
+                pixels[coordinates_to_array_index(width, x, y) + 1] = 0x00; //GREEN
+                pixels[coordinates_to_array_index(width, x, y) + 2] = 0x00; //BLUE
+                continue;
+            }
 
-            let mut x2_transformed: f64 = screen_coords_to_world_coords((x as f64) + 0.5, width,  scale, x_pos);
-            let mut y2_transformed: f64 = screen_coords_to_world_coords((y as f64) - 0.5, height, scale, y_pos);
+            let base_color: Lch = Srgb::new(0.8, 0.2, 0.1).into();
 
-            let mut subpixel2: [u32; 3] = [0x00, 0x00, 0x00];
-            let handle2 = thread::spawn(move || {
-                subpixel2 = calculate_subpixel(x2_transformed, y2_transformed, max_itterations);
-            });
+            let color = LinSrgb::from(
+                base_color.shift_hue(
+                    interpolate_hue(itterations as f32, 0.0, max_itterations as f32)
+                )
+            );
 
-            let mut x3_transformed: f64 = screen_coords_to_world_coords((x as f64) - 0.5, width,  scale, x_pos);
-            let mut y3_transformed: f64 = screen_coords_to_world_coords((y as f64) + 0.5, height, scale, y_pos);
+            let color_raw: [u8; 3] = Srgb::from_linear(color.into()).into_format().into_raw();
 
-            let mut subpixel3: [u32; 3] = [0x00, 0x00, 0x00];
-            let handle3 = thread::spawn(move || {
-                subpixel3 = calculate_subpixel(x3_transformed, y3_transformed, max_itterations);
-            });
-
-
-            let mut x4_transformed: f64 = screen_coords_to_world_coords((x as f64) + 0.5, width,  scale, x_pos);
-            let mut y4_transformed: f64 = screen_coords_to_world_coords((y as f64) + 0.5, height, scale, y_pos);
-
-            let mut subpixel4: [u32; 3] = [0x00, 0x00, 0x00];
-            let handle4 = thread::spawn(move || {
-                subpixel4 = calculate_subpixel(x4_transformed, y4_transformed, max_itterations);
-            });
-
-            handle1.join().unwrap();
-            handle2.join().unwrap();
-            handle3.join().unwrap();
-            handle4.join().unwrap();
-
-            pixels[coordinates_to_array_index(width, x, y) + 0] = ((subpixel1[0] + subpixel2[0] + subpixel3[0] + subpixel4[0]) / 4) as u8; //RED
-            pixels[coordinates_to_array_index(width, x, y) + 1] = ((subpixel1[1] + subpixel2[1] + subpixel3[1] + subpixel4[1]) / 4) as u8; //GREEN
-            pixels[coordinates_to_array_index(width, x, y) + 2] = ((subpixel1[2] + subpixel2[2] + subpixel3[2] + subpixel4[2]) / 4) as u8; //BLUE
-        
+            pixels[coordinates_to_array_index(width, x, y) + 0] = color_raw[0];
+            pixels[coordinates_to_array_index(width, x, y) + 1] = color_raw[1];
+            pixels[coordinates_to_array_index(width, x, y) + 2] = color_raw[2];
         }
     }
 
@@ -67,38 +47,28 @@ pub fn render_mandelbrot(width: u32, height: u32, x_pos: f64, y_pos: f64, scale:
     pixels
 }
 
-fn calculate_subpixel(x_transformed: f64, y_transformed: f64, max_itterations: u32) -> [u32; 3]{
-
-    let itterations = itterate(x_transformed, y_transformed, max_itterations);
-
-    if(itterations == max_itterations) {
-        return [0x00, 0x00, 0x00];
-    }
-
-    return [0xFF, 0xFF, 0xFF]
-}
-
-
-
-fn itterate(cx: f64, cy: f64, max_itterations: u32) -> u32 {
-    let mut zx: f64 = 0.0;
-    let mut zy: f64 = 0.0;
+//formula from https://en.wikipedia.org/wiki/Mandelbrot_set#Formal_definition
+fn itterate(c: Complex64, max_itterations: u32) -> u32 {
+    let mut z = Complex64::new(0.0, 0.0);
 
     for itteration in 1..max_itterations {
-        let xx = zx * zx;
-        let yy = zy * zy;
-        let xy = zx * zy;
+        z = z.powf(2.0) + c;
 
-        zx = (xx - yy) + cx;
-        zy = 2.0 * xy + cy;
-
-        if (zx * zx + zy * zy) > 4.0 {
+        if (z.re * z.re + z.im * z.im) > 4.0 {
             return itteration;
         }  
     }
 
     max_itterations
 
+}
+
+fn interpolate_hue(value: f32, min: f32, max: f32) -> f32 {
+    if value < min || value > max {
+        panic!("value has to be between min and max");
+    }
+
+    ((value - min) / (max - min)) * 360.0
 }
 
 fn coordinates_to_array_index(width: u32, x: u32, y: u32) -> usize {
