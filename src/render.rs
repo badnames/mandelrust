@@ -1,3 +1,5 @@
+use std::thread;
+
 pub fn render_mandelbrot(width: u32, height: u32, x_pos: f64, y_pos: f64, scale: f64, max_itterations: u32) -> Vec<u8> {
 
     let array_size = (3 * width * height) as usize;
@@ -17,28 +19,42 @@ pub fn render_mandelbrot(width: u32, height: u32, x_pos: f64, y_pos: f64, scale:
             let mut x1_transformed: f64 = screen_coords_to_world_coords((x as f64) - 0.5, width,  scale, x_pos);
             let mut y1_transformed: f64 = screen_coords_to_world_coords((y as f64) - 0.5, height, scale, y_pos);
 
-            let subpixel1 = calculate_subpixel(x1_transformed, y1_transformed, max_itterations);
-
+            let mut subpixel1: [u32; 3] = [0x00, 0x00, 0x00];
+            let handle1 = thread::spawn(move || {
+                subpixel1 = calculate_subpixel(x1_transformed, y1_transformed, max_itterations);
+            });
+            
 
             let mut x2_transformed: f64 = screen_coords_to_world_coords((x as f64) + 0.5, width,  scale, x_pos);
             let mut y2_transformed: f64 = screen_coords_to_world_coords((y as f64) - 0.5, height, scale, y_pos);
 
-            let subpixel2 = calculate_subpixel(x2_transformed, y2_transformed, max_itterations);
-
+            let mut subpixel2: [u32; 3] = [0x00, 0x00, 0x00];
+            let handle2 = thread::spawn(move || {
+                subpixel2 = calculate_subpixel(x2_transformed, y2_transformed, max_itterations);
+            });
 
             let mut x3_transformed: f64 = screen_coords_to_world_coords((x as f64) - 0.5, width,  scale, x_pos);
             let mut y3_transformed: f64 = screen_coords_to_world_coords((y as f64) + 0.5, height, scale, y_pos);
 
-            let subpixel3 = calculate_subpixel(x3_transformed, y3_transformed, max_itterations);
+            let mut subpixel3: [u32; 3] = [0x00, 0x00, 0x00];
+            let handle3 = thread::spawn(move || {
+                subpixel3 = calculate_subpixel(x3_transformed, y3_transformed, max_itterations);
+            });
 
 
             let mut x4_transformed: f64 = screen_coords_to_world_coords((x as f64) + 0.5, width,  scale, x_pos);
             let mut y4_transformed: f64 = screen_coords_to_world_coords((y as f64) + 0.5, height, scale, y_pos);
 
-            let mut subpixel4 = calculate_subpixel(x4_transformed, y4_transformed, max_itterations);
+            let mut subpixel4: [u32; 3] = [0x00, 0x00, 0x00];
+            let handle4 = thread::spawn(move || {
+                subpixel4 = calculate_subpixel(x4_transformed, y4_transformed, max_itterations);
+            });
 
+            handle1.join().unwrap();
+            handle2.join().unwrap();
+            handle3.join().unwrap();
+            handle4.join().unwrap();
 
-            
             pixels[coordinates_to_array_index(width, x, y) + 0] = ((subpixel1[0] + subpixel2[0] + subpixel3[0] + subpixel4[0]) / 4) as u8; //RED
             pixels[coordinates_to_array_index(width, x, y) + 1] = ((subpixel1[1] + subpixel2[1] + subpixel3[1] + subpixel4[1]) / 4) as u8; //GREEN
             pixels[coordinates_to_array_index(width, x, y) + 2] = ((subpixel1[2] + subpixel2[2] + subpixel3[2] + subpixel4[2]) / 4) as u8; //BLUE
