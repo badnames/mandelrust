@@ -1,7 +1,7 @@
 extern crate argparse;
 extern crate image;
 
-use argparse::{ArgumentParser, Store, StoreTrue};
+use argparse::{ArgumentParser, Store, StoreFalse};
 
 mod window;
 mod render;
@@ -57,7 +57,7 @@ fn main() {
         parser.parse_args_or_exit();
     }
 
-    if generateImage {
+    if generate_image {
         let buffer = render::render_mandelbrot(&render_args);
 
         image::save_buffer("image.png", &buffer[..], render_args.width, render_args.height, image::RGB(8)).unwrap();
