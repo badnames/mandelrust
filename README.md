@@ -4,10 +4,11 @@ Renderer for the mandelbrot set, implemented in the rust programming language.
 ## Implemented features:
 - rendering to a window
 - commandline interface
+- rendering to images
 
 ## Planned features:
 - multithreading
-- rendering to images
+
 
 ## Command line options
 - -w, --width: Set width of the window in pixes
