@@ -1,11 +1,13 @@
 extern crate argparse;
-use argparse::{ArgumentParser, Store};
+extern crate image;
+
+use argparse::{ArgumentParser, Store, StoreTrue};
 
 mod window;
 mod render;
 
 fn main() {
-    let mut console_args = render::RenderArgs {
+    let mut render_args = render::RenderArgs {
         width: 800,
         height: 800,
         x_pos: 0.0,
@@ -14,36 +16,53 @@ fn main() {
         max_itterations: 50
     };
 
+    let mut generateImage = true;
+    let mut imageName     = "mandelbrot.png".to_string();
+
     //parse commandline arguments
     {
         let mut parser = ArgumentParser::new();
         parser.set_description("Renders a slice of the mandelbrot set.");
         
-        parser.refer(&mut console_args.width)
+        parser.refer(&mut render_args.width)
             .add_option(&["-w", "--width"], Store,
             "the width of the window");
-        parser.refer(&mut console_args.height)
+        parser.refer(&mut render_args.height)
             .add_option(&["-h", "--height"], Store,
             "the height of the window");
 
-        parser.refer(&mut console_args.x_pos)
+        parser.refer(&mut render_args.x_pos)
             .add_option(&["-x"], Store,
             "move the camera on the x axis");
-        parser.refer(&mut console_args.y_pos)
+        parser.refer(&mut render_args.y_pos)
             .add_option(&["-y"], Store,
             "move the camera on the y axis");
 
-        parser.refer(&mut console_args.scale)
+        parser.refer(&mut render_args.scale)
             .add_option(&["-s", "--scale"], Store,
             "scale the viewport");
         
-        parser.refer(&mut console_args.max_itterations)
+        parser.refer(&mut render_args.max_itterations)
             .add_option(&["-i", "--itterations"], Store,
             "the maximum number of itterations used");
         
+        parser.refer(&mut generateImage)
+            .add_option(&["--dont-save"], StoreFalse,
+            "render to a window instead of an image");
+        
+        parser.refer(&mut imageName)
+            .add_option(&["--name"], Store,
+            "the name of the generated image");
+
         parser.parse_args_or_exit();
     }
 
-    window::start(console_args);
+    if generateImage {
+        let buffer = render::render_mandelbrot(&render_args);
+
+        image::save_buffer("image.png", &buffer[..], render_args.width, render_args.height, image::RGB(8)).unwrap();
+    } else {
+        window::start(&render_args);
+    }
 }
 

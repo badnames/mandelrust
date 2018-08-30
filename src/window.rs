@@ -7,7 +7,7 @@ use window::sdl2::pixels::PixelFormatEnum;
 
 use render;
 
-pub fn start(render_args: render::RenderArgs) {
+pub fn start(render_args: &render::RenderArgs) {
     //setup SDL
     let context = sdl2::init().unwrap();
     let context_video = context.video().unwrap();
