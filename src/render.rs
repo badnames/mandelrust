@@ -7,8 +7,8 @@ use self::palette::{Srgb, LinSrgb, Lch, Pixel, Hue};
 pub struct RenderArgs {
     pub width:           u32,
     pub height:          u32,
-    pub x_pos:               f64,
-    pub y_pos:               f64,
+    pub x_pos:           f64,
+    pub y_pos:           f64,
     pub scale:           f64,
     pub max_itterations: u32
 }
