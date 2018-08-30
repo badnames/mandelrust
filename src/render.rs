@@ -24,7 +24,7 @@ pub fn render_mandelbrot(args: &RenderArgs) -> Vec<u8> {
     for y in 0..args.height { 
         for x in 0..args.width {
             let transformed = Complex64::new( (x as f64) / ((args.width) as f64)  * args.scale - args.scale / 2.0 + args.x_pos,
-                                              (y as f64) / ((args.height) as f64) * args.scale - args.scale / 2.0 + args.y_pos);
+                                              (y as f64) / ((args.width) as f64)  * args.scale - args.scale / 2.0 + args.y_pos);
 
             let itterations = itterate(transformed, args.max_itterations);
 
