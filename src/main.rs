@@ -16,8 +16,8 @@ fn main() {
         max_itterations: 50
     };
 
-    let mut generateImage = true;
-    let mut imageName     = "mandelbrot.png".to_string();
+    let mut generate_image = true;
+    let mut image_name     = "mandelbrot.png".to_string();
 
     //parse commandline arguments
     {
@@ -46,11 +46,11 @@ fn main() {
             .add_option(&["-i", "--itterations"], Store,
             "the maximum number of itterations used");
         
-        parser.refer(&mut generateImage)
+        parser.refer(&mut generate_image)
             .add_option(&["--dont-save"], StoreFalse,
             "render to a window instead of an image");
         
-        parser.refer(&mut imageName)
+        parser.refer(&mut image_name)
             .add_option(&["--name"], Store,
             "the name of the generated image");
 
