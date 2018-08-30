@@ -10,23 +10,17 @@ Renderer for the mandelbrot set, implemented in the rust programming language.
 - rendering to images
 
 ## Command line options
-- -w, --width
-Set width of the window in pixes
+- -w, --width: Set width of the window in pixes
 
-- -h, --height
-Set height of the window in pixels
+- -h, --height: Set height of the window in pixels
 
-- -x
-The camera offset on the x axis
+- -x: The camera offset on the x axis
 
-- -y
-The camera offset on the y axis
+- -y: The camera offset on the y axis
 
-- -s, --scale
-Set the size of the viewport on the x and y axis
+- -s, --scale: Set the size of the viewport on the x and y axis
 
-- -i --itterations
-The maximum number of itterations per pixel. 
+- -i --itterations: The maximum number of itterations per pixel. 
 
-Since I am writing this program in order to learn rust, there will be some messy code in this repository.
+P.S.: Since I am writing this program in order to learn rust, there might be some messy code in this repository ;)
 
