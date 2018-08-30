@@ -4,25 +4,34 @@ extern crate palette;
 use render::num_complex::Complex64;
 use self::palette::{Srgb, LinSrgb, Lch, Pixel, Hue};
 
-pub fn render_mandelbrot(width: u32, height: u32, x_pos: f64, y_pos: f64, scale: f64, max_itterations: u32) -> Vec<u8> {
+pub struct RenderArgs {
+    pub width:           u32,
+    pub height:          u32,
+    pub x_pos:               f64,
+    pub y_pos:               f64,
+    pub scale:           f64,
+    pub max_itterations: u32
+}
 
-    let array_size = (3 * width * height) as usize;
+pub fn render_mandelbrot(args: &RenderArgs) -> Vec<u8> {
+
+    let array_size = (3 * args.width * args.height) as usize;
     
     let mut pixels: Vec<u8> = vec![0xFF; array_size];
 
     println!("rendering...");
 
-    for y in 0..height { 
-        for x in 0..width {
-            let transformed = Complex64::new( (x as f64) / ((width) as f64)  * scale - scale / 2.0 + x_pos,
-                                              (y as f64) / ((height) as f64) * scale - scale / 2.0 + y_pos);
+    for y in 0..args.height { 
+        for x in 0..args.width {
+            let transformed = Complex64::new( (x as f64) / ((args.width) as f64)  * args.scale - args.scale / 2.0 + args.x_pos,
+                                              (y as f64) / ((args.height) as f64) * args.scale - args.scale / 2.0 + args.y_pos);
 
-            let itterations = itterate(transformed, max_itterations);
+            let itterations = itterate(transformed, args.max_itterations);
 
-            if itterations == max_itterations {
-                pixels[coordinates_to_array_index(width, x, y) + 0] = 0x00; //RED
-                pixels[coordinates_to_array_index(width, x, y) + 1] = 0x00; //GREEN
-                pixels[coordinates_to_array_index(width, x, y) + 2] = 0x00; //BLUE
+            if itterations == args.max_itterations {
+                pixels[coordinates_to_array_index(args.width, x, y) + 0] = 0x00; //RED
+                pixels[coordinates_to_array_index(args.width, x, y) + 1] = 0x00; //GREEN
+                pixels[coordinates_to_array_index(args.width, x, y) + 2] = 0x00; //BLUE
                 continue;
             }
 
@@ -30,15 +39,15 @@ pub fn render_mandelbrot(width: u32, height: u32, x_pos: f64, y_pos: f64, scale:
 
             let color = LinSrgb::from(
                 base_color.shift_hue(
-                    interpolate_hue(itterations as f32, 0.0, max_itterations as f32)
+                    interpolate_hue(itterations as f32, 0.0, args.max_itterations as f32)
                 )
             );
 
             let color_raw: [u8; 3] = Srgb::from_linear(color.into()).into_format().into_raw();
 
-            pixels[coordinates_to_array_index(width, x, y) + 0] = color_raw[0];
-            pixels[coordinates_to_array_index(width, x, y) + 1] = color_raw[1];
-            pixels[coordinates_to_array_index(width, x, y) + 2] = color_raw[2];
+            pixels[coordinates_to_array_index(args.width, x, y) + 0] = color_raw[0];
+            pixels[coordinates_to_array_index(args.width, x, y) + 1] = color_raw[1];
+            pixels[coordinates_to_array_index(args.width, x, y) + 2] = color_raw[2];
         }
     }
 

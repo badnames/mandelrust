@@ -1,5 +1,6 @@
 extern crate sdl2;
 extern crate gl;
+extern crate argparse;
 
 mod render;
 
@@ -7,23 +8,53 @@ use sdl2::event::{Event};
 use sdl2::surface::{Surface};
 use sdl2::pixels::PixelFormatEnum;
 
-const WIDTH: u32 = 800;
-const HEIGHT: u32 = 600; 
-
-const X_POS: f64 = -0.0091275;
-const Y_POS: f64= 0.7899912;
-
-const MAX_ITTERATIONS: u32 = 200;
-
-const SCALE: f64 = 0.1;
+use argparse::{ArgumentParser, Store};
 
 fn main() {
+    let mut console_args = render::RenderArgs {
+        width: 800,
+        height: 600,
+        x_pos: 0.0,
+        y_pos: 0.0,
+        scale: 5.0,
+        max_itterations: 50
+    };
+
+    //parse commandline arguments
+    {
+        let mut parser = ArgumentParser::new();
+        parser.set_description("Renders a slice of the mandelbrot set.");
+        
+        parser.refer(&mut console_args.width)
+            .add_option(&["-w", "--width"], Store,
+            "the width of the window");
+        parser.refer(&mut console_args.height)
+            .add_option(&["-h", "--height"], Store,
+            "the height of the window");
+
+        parser.refer(&mut console_args.x_pos)
+            .add_option(&["-x"], Store,
+            "move the camera on the x axis");
+        parser.refer(&mut console_args.y_pos)
+            .add_option(&["-y"], Store,
+            "move the camera on the y axis");
+
+        parser.refer(&mut console_args.scale)
+            .add_option(&["-s", "--scale"], Store,
+            "scale the viewport");
+        
+        parser.refer(&mut console_args.max_itterations)
+            .add_option(&["-i", "--itterations"], Store,
+            "the maximum number of itterations used");
+        
+        parser.parse_args_or_exit();
+    }
 
     //setup SDL
     let context = sdl2::init().unwrap();
     let context_video = context.video().unwrap();
     
-    let window = context_video.window("Mandelbrot Renderer", WIDTH, HEIGHT)
+    let window = context_video.window("Mandelbrot Renderer", console_args.width, console_args.height)
     .position_centered()
     .opengl()
     .build()
@@ -41,11 +72,11 @@ fn main() {
     
 
 
-    let mut pixels = render::render_mandelbrot(WIDTH, HEIGHT, X_POS, Y_POS, SCALE, MAX_ITTERATIONS);
+    let mut pixels = render::render_mandelbrot(&console_args);
     
 
 
-    let surface = match Surface::from_data(&mut pixels[..], WIDTH, HEIGHT, 3 * WIDTH, PixelFormatEnum::RGB24) {
+    let surface = match Surface::from_data(&mut pixels[..], console_args.width, console_args.height, 3 * console_args.width, PixelFormatEnum::RGB24) {
         Ok(surface) => surface,
         Err(err) => panic!("Invalid surface generated: {}", err)
     };

@@ -5,8 +5,8 @@ Since I am writing this program in order to learn rust, there will be some messy
 
 Implemented features:
 - rendering to a window
+- commandline interface
 
 Planned features:
-- commandline interface
 - multithreading
 - rendering to images
