@@ -74,7 +74,9 @@ fn main() {
         let mut buffer = buffer_ref.lock().unwrap();
 
         image::save_buffer("image.png", &buffer[..], render_args.width, render_args.height, image::RGB(8)).unwrap();
+
     } else {
+        
         window::start(render_args_ref);
     }
 }

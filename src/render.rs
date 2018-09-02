@@ -24,24 +24,27 @@ pub fn render_mandelbrot(render_args_ref: &Arc<RenderArgs>, pixels:& Arc<Mutex<V
      
     let mut handles = vec![];
 
-    println!("rendering...");
+    println!("rendering on {} cpus", num_cpus::get());
+
 
     for num_cpu in 0..num_cpus::get() {
         let pixelRef = Arc::clone(pixels);
         let render_args_ref  = Arc::clone(render_args_ref);
 
-        let partition_width  = args.width  / num_cpus::get() as u32;
         let partition_height = args.height / num_cpus::get() as u32;
 
-        let partition_start_x = partition_width  * num_cpu as u32;
+        let partition_start_x = 0;
         let partition_start_y = partition_height * num_cpu as u32;
 
-        let partition_end_x = partition_width  * (num_cpu as u32 + 1) - 1;
-        let partition_end_y = partition_height * (num_cpu as u32 + 1) - 1;
+        let partition_end_x = args.width;
+        let partition_end_y = partition_height * (num_cpu as u32 + 1);
         
         let handle = thread::spawn(move || {
+            println!("starting thread #{}", num_cpu);
             subRender(render_args_ref, pixelRef, partition_start_x, partition_end_x, partition_start_y, partition_end_y);
+            println!("finishing thread #{}", num_cpu);
         });
+
         handles.push(handle);
     }
 
