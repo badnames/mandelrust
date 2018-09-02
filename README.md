@@ -1,7 +1,7 @@
 # mandelrust
 Fractal Renderer for the mandelbrot set, implemented in the rust programming language.
 
-##license
+## license
 MIT (see LICENSE.txt for details)
 
 ## Command line options
