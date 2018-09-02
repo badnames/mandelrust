@@ -4,7 +4,6 @@ extern crate image;
 use argparse::{ArgumentParser, Store, StoreTrue};
 use std::sync::{Arc, Mutex};
 
-mod window;
 mod render;
 
 fn main() {
@@ -46,11 +45,7 @@ fn main() {
         parser.refer(&mut render_args.max_itterations)
             .add_option(&["-i", "--itterations"], Store,
             "the maximum number of itterations used");
-        
-        parser.refer(&mut show_window)
-            .add_option(&["--show-window"], StoreTrue,
-            "show the end result inside of a window");
-        
+         
         parser.refer(&mut image_name)
             .add_option(&["--name"], Store,
             "the name of the generated image");
@@ -74,8 +69,5 @@ fn main() {
 
     image::save_buffer("image.png", &canvas[..], render_args.width, render_args.height, image::RGB(8)).unwrap();
 
-    if show_window {
-        window::start(render_args_ref, &canvas);
-    }
-}
+ }
 
