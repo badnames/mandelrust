@@ -1,7 +1,7 @@
 extern crate argparse;
 extern crate image;
 
-use argparse::{ArgumentParser, Store, StoreTrue};
+use argparse::{ArgumentParser, Store};
 use std::sync::{Arc, Mutex};
 
 mod render;
@@ -17,7 +17,6 @@ fn main() {
     };
 
 
-    let mut show_window    = false;
     let mut image_name     = "mandelbrot.png".to_string();
 
    {
@@ -65,7 +64,7 @@ fn main() {
     render::render_mandelbrot(&render_args_ref, &canvas);
 
     let canvas = Arc::clone(&canvas);
-    let mut canvas = canvas.lock().unwrap();
+    let canvas = canvas.lock().unwrap();
 
     image::save_buffer("image.png", &canvas[..], render_args.width, render_args.height, image::RGB(8)).unwrap();
 

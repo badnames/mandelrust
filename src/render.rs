@@ -34,7 +34,6 @@ pub fn render_mandelbrot(render_args_ref: &Arc<RenderArgs>, canvas:& Arc<Mutex<V
         let canvas = Arc::clone(canvas);
         let render_args_ref  = Arc::clone(render_args_ref);
 
-        //each thread calculates a 
         let partition_height = args.height / num_cpus::get() as u32;
         
         let partition_start_x = 0;
@@ -60,7 +59,7 @@ pub fn render_mandelbrot(render_args_ref: &Arc<RenderArgs>, canvas:& Arc<Mutex<V
 
 }
 
-/**  This function contains the logic that is handled by the rendering threads
+/**  Contains the logic that is handled by the rendering threads
  */
 fn sub_render(args: Arc<RenderArgs>, canvas: Arc<Mutex<Vec<u8>>>, start_x: u32, end_x: u32, start_y: u32, end_y: u32) {
 
@@ -84,7 +83,7 @@ fn sub_render(args: Arc<RenderArgs>, canvas: Arc<Mutex<Vec<u8>>>, start_x: u32, 
 
             let base_color: Lch = Srgb::new(0.8, 0.2, 0.1).into();
 
-            /** If a pixel is not in part of the set, its color canges 
+            /* If a pixel is not in part of the set, its color canges 
              *  according to the number of itterations it took to figure
              *  that out. This creates psychedelic color bands
              *  around the fractal.
