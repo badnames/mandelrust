@@ -1,7 +1,7 @@
 [package]
 name = "mandelbrot_renderer"
-version = "0.1.0"
-authors = ["MSchalk <schalk.moritz@yahoo.de>"]
+version = "0.2.0"
+authors = ["Moritz Schalk <schalk.moritz@yahoo.de>"]
 
 [dependencies]
 sdl2 = "0.31"

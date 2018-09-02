@@ -19,7 +19,7 @@ fn main() {
 
     let mut image_name     = "mandelbrot.png".to_string();
 
-   {
+    {
         let mut parser = ArgumentParser::new();
         parser.set_description("Renders a slice of the mandelbrot set.");
         
