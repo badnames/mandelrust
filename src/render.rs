@@ -1,9 +1,14 @@
 extern crate num_complex;
 extern crate palette;
+extern crate num_cpus;
+
+use std::sync::{Mutex, Arc};
+use std::thread;
 
 use render::num_complex::Complex64;
 use self::palette::{Srgb, LinSrgb, Lch, Pixel, Hue};
 
+#[derive(Copy, Clone)]
 pub struct RenderArgs {
     pub width:           u32,
     pub height:          u32,
@@ -13,18 +18,51 @@ pub struct RenderArgs {
     pub max_itterations: u32
 }
 
-pub fn render_mandelbrot(args: &RenderArgs) -> Vec<u8> {
+pub fn render_mandelbrot(render_args_ref: &Arc<RenderArgs>, pixels:& Arc<Mutex<Vec<u8>>>) {
 
-    let array_size = (3 * args.width * args.height) as usize;
-    
-    let mut pixels: Vec<u8> = vec![0xFF; array_size];
+    let args = Arc::clone(render_args_ref);
+     
+    let mut handles = vec![];
 
     println!("rendering...");
 
-    for y in 0..args.height { 
-        for x in 0..args.width {
+    for num_cpu in 0..num_cpus::get() {
+        let pixelRef = Arc::clone(pixels);
+        let render_args_ref  = Arc::clone(render_args_ref);
+
+        let partition_width  = args.width  / num_cpus::get() as u32;
+        let partition_height = args.height / num_cpus::get() as u32;
+
+        let partition_start_x = partition_width  * num_cpu as u32;
+        let partition_start_y = partition_height * num_cpu as u32;
+
+        let partition_end_x = partition_width  * (num_cpu as u32 + 1) - 1;
+        let partition_end_y = partition_height * (num_cpu as u32 + 1) - 1;
+        
+        let handle = thread::spawn(move || {
+            subRender(render_args_ref, pixelRef, partition_start_x, partition_end_x, partition_start_y, partition_end_y);
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+    
+    println!("done");
+
+}
+
+fn subRender(argsRef: Arc<RenderArgs>, pixelRef: Arc<Mutex<Vec<u8>>>, start_x: u32, end_x: u32, start_y: u32, end_y: u32) {
+
+    let pixelRef   = Arc::clone(&pixelRef);
+    let mut pixels = pixelRef.lock().unwrap();
+    let     args   = Arc::clone(&argsRef);      
+
+    for y in start_y..end_y { 
+        for x in start_x..end_x {
             let transformed = Complex64::new( (x as f64) / ((args.width) as f64)  * args.scale - args.scale / 2.0 + args.x_pos,
-                                              (y as f64) / ((args.width) as f64)  * args.scale - args.scale / 2.0 + args.y_pos);
+                                            (y as f64) / ((args.width) as f64)  * args.scale - args.scale / 2.0 + args.y_pos);
 
             let itterations = itterate(transformed, args.max_itterations);
 
@@ -50,10 +88,6 @@ pub fn render_mandelbrot(args: &RenderArgs) -> Vec<u8> {
             pixels[coordinates_to_array_index(args.width, x, y) + 2] = color_raw[2];
         }
     }
-
-    println!("done");
-
-    pixels
 }
 
 //formula from https://en.wikipedia.org/wiki/Mandelbrot_set#Formal_definition

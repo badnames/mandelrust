@@ -9,6 +9,7 @@ num-complex = "0.2"
 palette = "0.4.1"
 argparse = "0.2.1"
 image = "*"
+num_cpus = "0.2"
 
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"
