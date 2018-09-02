@@ -24,7 +24,7 @@ pub fn render_mandelbrot(render_args_ref: &Arc<RenderArgs>, pixels:& Arc<Mutex<V
      
     let mut handles = vec![];
 
-    println!("rendering on {} cpus", num_cpus::get());
+    println!("rendering on {} threads", num_cpus::get());
 
 
     for num_cpu in 0..num_cpus::get() {
@@ -65,7 +65,7 @@ fn subRender(argsRef: Arc<RenderArgs>, pixelRef: Arc<Mutex<Vec<u8>>>, start_x: u
     for y in start_y..end_y { 
         for x in start_x..end_x {
             let transformed = Complex64::new( (x as f64) / ((args.width) as f64)  * args.scale - args.scale / 2.0 + args.x_pos,
-                                            (y as f64) / ((args.width) as f64)  * args.scale - args.scale / 2.0 + args.y_pos);
+                                              (y as f64) / ((args.width) as f64)  * args.scale - args.scale / 2.0 + args.y_pos);
 
             let itterations = itterate(transformed, args.max_itterations);
 
