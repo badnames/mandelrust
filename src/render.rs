@@ -8,6 +8,10 @@ use std::thread;
 use render::num_complex::Complex64;
 use self::palette::{Srgb, LinSrgb, Lch, Pixel, Hue};
 
+/** Stores the rendering
+ *  settings that are 
+ *  accessible to the user
+ */
 #[derive(Copy, Clone)]
 pub struct RenderArgs {
     pub width:           u32,
@@ -18,7 +22,7 @@ pub struct RenderArgs {
     pub max_itterations: u32
 }
 
-pub fn render_mandelbrot(render_args_ref: &Arc<RenderArgs>, pixels:& Arc<Mutex<Vec<u8>>>) {
+pub fn render_mandelbrot(render_args_ref: &Arc<RenderArgs>, canvas:& Arc<Mutex<Vec<u8>>>) {
 
     let args = Arc::clone(render_args_ref);
      
@@ -26,13 +30,13 @@ pub fn render_mandelbrot(render_args_ref: &Arc<RenderArgs>, pixels:& Arc<Mutex<V
 
     println!("rendering on {} threads", num_cpus::get());
 
-
     for num_cpu in 0..num_cpus::get() {
-        let pixelRef = Arc::clone(pixels);
+        let canvas = Arc::clone(canvas);
         let render_args_ref  = Arc::clone(render_args_ref);
 
+        //each thread calculates a 
         let partition_height = args.height / num_cpus::get() as u32;
-
+        
         let partition_start_x = 0;
         let partition_start_y = partition_height * num_cpu as u32;
 
@@ -41,7 +45,7 @@ pub fn render_mandelbrot(render_args_ref: &Arc<RenderArgs>, pixels:& Arc<Mutex<V
         
         let handle = thread::spawn(move || {
             println!("starting thread #{}", num_cpu);
-            subRender(render_args_ref, pixelRef, partition_start_x, partition_end_x, partition_start_y, partition_end_y);
+            sub_render(render_args_ref, canvas, partition_start_x, partition_end_x, partition_start_y, partition_end_y);
             println!("finishing thread #{}", num_cpu);
         });
 
@@ -56,11 +60,13 @@ pub fn render_mandelbrot(render_args_ref: &Arc<RenderArgs>, pixels:& Arc<Mutex<V
 
 }
 
-fn subRender(argsRef: Arc<RenderArgs>, pixelRef: Arc<Mutex<Vec<u8>>>, start_x: u32, end_x: u32, start_y: u32, end_y: u32) {
+/**  This function contains the logic that is handled by the rendering threads
+ */
+fn sub_render(args: Arc<RenderArgs>, canvas: Arc<Mutex<Vec<u8>>>, start_x: u32, end_x: u32, start_y: u32, end_y: u32) {
 
-    let pixelRef   = Arc::clone(&pixelRef);
-    let mut pixels = pixelRef.lock().unwrap();
-    let     args   = Arc::clone(&argsRef);      
+    let     canvas = Arc::clone(&canvas);
+    let mut canvas = canvas.lock().unwrap();
+    let     args   = Arc::clone(&args);      
 
     for y in start_y..end_y { 
         for x in start_x..end_x {
@@ -70,35 +76,40 @@ fn subRender(argsRef: Arc<RenderArgs>, pixelRef: Arc<Mutex<Vec<u8>>>, start_x: u
             let itterations = itterate(transformed, args.max_itterations);
 
             if itterations == args.max_itterations {
-                pixels[coordinates_to_array_index(args.width, x, y) + 0] = 0x00; //RED
-                pixels[coordinates_to_array_index(args.width, x, y) + 1] = 0x00; //GREEN
-                pixels[coordinates_to_array_index(args.width, x, y) + 2] = 0x00; //BLUE
+                canvas[coordinates_to_array_index(args.width, x, y) + 0] = 0x00; //RED
+                canvas[coordinates_to_array_index(args.width, x, y) + 1] = 0x00; //GREEN
+                canvas[coordinates_to_array_index(args.width, x, y) + 2] = 0x00; //BLUE
                 continue;
             }
 
             let base_color: Lch = Srgb::new(0.8, 0.2, 0.1).into();
 
+            /** If a pixel is not in part of the set, its color canges 
+             *  according to the number of itterations it took to figure
+             *  that out. This creates psychedelic color bands
+             *  around the fractal.
+             */
             let color = LinSrgb::from(
                 base_color.shift_hue(
                     interpolate_hue(itterations as f32, 0.0, args.max_itterations as f32)
                 )
             );
 
+            //the buffer can only take linear RGB colors 
             let color_raw: [u8; 3] = Srgb::from_linear(color.into()).into_format().into_raw();
 
-            pixels[coordinates_to_array_index(args.width, x, y) + 0] = color_raw[0];
-            pixels[coordinates_to_array_index(args.width, x, y) + 1] = color_raw[1];
-            pixels[coordinates_to_array_index(args.width, x, y) + 2] = color_raw[2];
+            canvas[coordinates_to_array_index(args.width, x, y) + 0] = color_raw[0];
+            canvas[coordinates_to_array_index(args.width, x, y) + 1] = color_raw[1];
+            canvas[coordinates_to_array_index(args.width, x, y) + 2] = color_raw[2];
         }
     }
 }
 
-//formula from https://en.wikipedia.org/wiki/Mandelbrot_set#Formal_definition
 fn itterate(c: Complex64, max_itterations: u32) -> u32 {
     let mut z = Complex64::new(0.0, 0.0);
 
     for itteration in 1..max_itterations {
-        z = z.powf(2.0) + c;
+        z = z.powf(2.0) + c; //formula from https://en.wikipedia.org/wiki/Mandelbrot_set#Formal_definition
 
         if (z.re * z.re + z.im * z.im) > 4.0 {
             return itteration;

@@ -1,7 +1,7 @@
 extern crate argparse;
 extern crate image;
 
-use argparse::{ArgumentParser, Store, StoreFalse};
+use argparse::{ArgumentParser, Store, StoreTrue};
 use std::sync::{Arc, Mutex};
 
 mod window;
@@ -18,7 +18,7 @@ fn main() {
     };
 
 
-    let mut generate_image = true;
+    let mut show_window    = false;
     let mut image_name     = "mandelbrot.png".to_string();
 
    {
@@ -47,9 +47,9 @@ fn main() {
             .add_option(&["-i", "--itterations"], Store,
             "the maximum number of itterations used");
         
-        parser.refer(&mut generate_image)
-            .add_option(&["--dont-save"], StoreFalse,
-            "render to a window instead of an image");
+        parser.refer(&mut show_window)
+            .add_option(&["--show-window"], StoreTrue,
+            "show the end result inside of a window");
         
         parser.refer(&mut image_name)
             .add_option(&["--name"], Store,
@@ -61,23 +61,21 @@ fn main() {
     let render_args_ref = Arc::new(render_args);
     let render_args = Arc::clone(&render_args_ref);
 
-    if generate_image {
-        let buffer_ref = Arc::new(
-            Mutex::new(
-                vec![0x00; (render_args.width * render_args.height * 3) as usize]
-            )
-        );
+    let canvas = Arc::new(
+        Mutex::new(
+            vec![0x00; (render_args.width * render_args.height * 3) as usize]
+        )
+    );
 
-        render::render_mandelbrot(&render_args_ref, &buffer_ref);
+    render::render_mandelbrot(&render_args_ref, &canvas);
 
-        let buffer_ref = Arc::clone(&buffer_ref);
-        let mut buffer = buffer_ref.lock().unwrap();
+    let canvas = Arc::clone(&canvas);
+    let mut canvas = canvas.lock().unwrap();
 
-        image::save_buffer("image.png", &buffer[..], render_args.width, render_args.height, image::RGB(8)).unwrap();
+    image::save_buffer("image.png", &canvas[..], render_args.width, render_args.height, image::RGB(8)).unwrap();
 
-    } else {
-        
-        window::start(render_args_ref);
+    if show_window {
+        window::start(render_args_ref, &canvas);
     }
 }
 
