@@ -17,7 +17,7 @@ fn main() {
     };
 
 
-    let mut image_name     = "mandelbrot.png".to_string();
+    let mut image_name = "mandelbrot.png".to_string();
 
     {
         let mut parser = ArgumentParser::new();
@@ -66,7 +66,7 @@ fn main() {
     let canvas = Arc::clone(&canvas);
     let canvas = canvas.lock().unwrap();
 
-    image::save_buffer("image.png", &canvas[..], render_args.width, render_args.height, image::RGB(8)).unwrap();
+    image::save_buffer(image_name, &canvas[..], render_args.width, render_args.height, image::RGB(8)).unwrap();
 
  }
 

@@ -83,9 +83,9 @@ fn sub_render(args: Arc<RenderArgs>, canvas: Arc<Mutex<Vec<u8>>>, start_x: u32, 
 
             let base_color: Lch = Srgb::new(0.8, 0.2, 0.1).into();
 
-            /* If a pixel is not in part of the set, its color canges 
+            /* If a pixel is not in part of the set, its color changes 
              *  according to the number of itterations it took to figure
-             *  that out. This creates psychedelic color bands
+             *  that out. This creates the typical psychedelic color bands
              *  around the fractal.
              */
             let color = LinSrgb::from(
@@ -119,6 +119,8 @@ fn itterate(c: Complex64, max_itterations: u32) -> u32 {
 
 }
 
+/* used to convert from the number of itterations to color hue 
+ */
 fn interpolate_hue(value: f32, min: f32, max: f32) -> f32 {
     if value < min || value > max {
         panic!("value has to be between min and max");
@@ -127,6 +129,8 @@ fn interpolate_hue(value: f32, min: f32, max: f32) -> f32 {
     ((value - min) / (max - min)) * 360.0
 }
 
+/* locates the start of a pixel in an array of consecutive RGB values
+ */
 fn coordinates_to_array_index(width: u32, x: u32, y: u32) -> usize {
     ((y * width * 3) + (x * 3)) as usize
 }
